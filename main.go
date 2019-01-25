@@ -8,6 +8,18 @@
  * the heap to allocate the memory and
  * garbage collection when that memory is no longer needed
  */
+
+/**
+ * The next thing to deal with is the WaitGroup.
+ * It needs to be on the heap because it is accessed
+ * from different goroutines. What doesn't need to
+ * be on the heap are the many references to it.
+ * This can be fixed by initially getting a pointer to it.
+ *
+ * The function and &rand.Rand literal escapes can be
+ * removed by moving the creation of r into the closer
+ * and then converting the closure into a separate function.
+ */
 package main
 
 import (
@@ -37,7 +49,7 @@ func lottoNumbers(n int) [][]int {
 	all := make([]int, total)
 	list := make([][]int, n)
 	seed := time.Now().UnixNano()
-	var wg sync.WaitGroup
+	wg := &sync.WaitGroup{}
 	workers := runtime.GOMAXPROCS(-1) // one for each proc
 
 	for i := 0; i < workers; i++ {
@@ -49,16 +61,11 @@ func lottoNumbers(n int) [][]int {
 			end += n % workers
 		}
 
-		r := rand.New(rand.NewSource(seed + int64(i)))
-
 		wg.Add(1)
-		go func() {
-			defer wg.Done()
-
-			for i := begin; i < end; i++ {
-				all[i] = r.Intn(49)
-			}
-		}()
+		//Removing duplicate references to wg by passing
+		//a pointer to the wait group reference created
+		//initially
+		go lottoNumbersWorker(wg, seed+int64(i), all, begin, end)
 	}
 
 	wg.Wait()
@@ -68,4 +75,14 @@ func lottoNumbers(n int) [][]int {
 	}
 
 	return list
+}
+
+func lottoNumbersWorker(wg *sync.WaitGroup, seed int64, all []int, begin, end int) {
+	defer wg.Done()
+
+	r := rand.New(rand.NewSource(seed))
+
+	for i := begin; i < end; i++ {
+		all[i] = r.Intn(49)
+	}
 }
