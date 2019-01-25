@@ -22,24 +22,20 @@ func main() {
 }
 
 func lottoNumbers(n int) [][]int {
-	var list = [][]int{}
-	rand.Seed(time.Now().UnixNano())
-
-	rec := make(chan []int, n)
-
-	go func(c chan []int) {
-		for {
-			list = append(list, <-c)
-		}
-	}(rec)
-
+	var parallelCount = 10
+	var iterations = n / parallelCount
+	var list = make([][]int, parallelCount*iterations)
 	var wg sync.WaitGroup
-	for i := 0; i < 10; i++ {
-		wg.Add(1)
-		func() {
+
+	wg.Add(parallelCount)
+	for i := 0; i < parallelCount; i++ {
+		go func() {
 			defer wg.Done()
-			for i := 0; i < n; i++ {
-				add(rec)
+
+			r := rand.New(rand.NewSource(time.Now().UnixNano()))
+
+			for i := 0; i < iterations; i++ {
+				list[parallelCount*iterations-1] = add(r)
 			}
 		}()
 	}
@@ -48,14 +44,14 @@ func lottoNumbers(n int) [][]int {
 	return list
 }
 
-func add(c chan []int) {
-	c <- []int{
-		rand.Intn(49),
-		rand.Intn(49),
-		rand.Intn(49),
-		rand.Intn(49),
-		rand.Intn(49),
-		rand.Intn(49),
-		rand.Intn(49),
+func add(r *rand.Rand) []int {
+	return []int{
+		r.Intn(49),
+		r.Intn(49),
+		r.Intn(49),
+		r.Intn(49),
+		r.Intn(49),
+		r.Intn(49),
+		r.Intn(49),
 	}
 }
