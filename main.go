@@ -24,8 +24,7 @@ func main() {
 
 func lottoNumbers(n int) [][]int {
 	list := make([][]int, n)
-	rand.Seed(time.Now().UnixNano())
-
+	seed := time.Now().UnixNano()
 	var wg sync.WaitGroup
 	workers := runtime.GOMAXPROCS(-1) // one for each proc
 
@@ -38,19 +37,21 @@ func lottoNumbers(n int) [][]int {
 			end += n % workers
 		}
 
+		r := rand.New(rand.NewSource(seed + int64(i)))
+
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 
 			for i := begin; i < end; i++ {
 				list[i] = []int{
-					rand.Intn(49),
-					rand.Intn(49),
-					rand.Intn(49),
-					rand.Intn(49),
-					rand.Intn(49),
-					rand.Intn(49),
-					rand.Intn(49),
+					r.Intn(49),
+					r.Intn(49),
+					r.Intn(49),
+					r.Intn(49),
+					r.Intn(49),
+					r.Intn(49),
+					r.Intn(49),
 				}
 			}
 		}()
