@@ -4,8 +4,8 @@ import (
 	"math"
 	"testing"
 
-	"gonum.org/v1/gonum/stat"
-	"gonum.org/v1/gonum/stat/distuv"
+	"github.com/gonum/stat"
+	"github.com/gonum/stat/distuv"
 )
 
 func within(a, b, maxDiff float64) bool {
@@ -85,5 +85,11 @@ func TestLottoNumbers(t *testing.T) {
 	exk := stat.ExKurtosis(x, nil)
 	if !within(exk, uniform.ExKurtosis(), maxDiff) {
 		t.Errorf("ExKurtosis not within %v of uniform (%v): %v", maxDiff, uniform.ExKurtosis(), exk)
+	}
+}
+
+func BenchmarkLottoNumbers(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		lottoNumbers(numberToGenerate)
 	}
 }
