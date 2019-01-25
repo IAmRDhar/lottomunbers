@@ -1,9 +1,10 @@
-//This version is much faster. The speedup was achieved by not doing the extra work the original version did.
 package main
 
 import (
 	"fmt"
 	"math/rand"
+	"runtime"
+	"sync"
 	"time"
 )
 
@@ -22,20 +23,40 @@ func main() {
 }
 
 func lottoNumbers(n int) [][]int {
-	list := make([][]int, 0, n)
+	list := make([][]int, n)
 	rand.Seed(time.Now().UnixNano())
 
-	for i := 0; i < n; i++ {
-		list = append(list, []int{
-			rand.Intn(49),
-			rand.Intn(49),
-			rand.Intn(49),
-			rand.Intn(49),
-			rand.Intn(49),
-			rand.Intn(49),
-			rand.Intn(49),
-		})
+	var wg sync.WaitGroup
+	workers := runtime.GOMAXPROCS(-1) // one for each proc
+
+	for i := 0; i < workers; i++ {
+		work := n / workers
+		begin := work * i
+		end := begin + work
+
+		if i == workers-1 {
+			end += n % workers
+		}
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			for i := begin; i < end; i++ {
+				list[i] = []int{
+					rand.Intn(49),
+					rand.Intn(49),
+					rand.Intn(49),
+					rand.Intn(49),
+					rand.Intn(49),
+					rand.Intn(49),
+					rand.Intn(49),
+				}
+			}
+		}()
 	}
+
+	wg.Wait()
 
 	return list
 }
