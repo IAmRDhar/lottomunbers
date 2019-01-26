@@ -4,8 +4,8 @@ import (
 	"math"
 	"testing"
 
-	"github.com/gonum/stat"
-	"github.com/gonum/stat/distuv"
+	"gonum.org/v1/gonum/stat"
+	"gonum.org/v1/gonum/stat/distuv"
 )
 
 func within(a, b, maxDiff float64) bool {
